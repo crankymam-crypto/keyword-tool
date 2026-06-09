@@ -226,6 +226,8 @@ function handleFile(file) {
       const sheetName = wb.SheetNames.find(n => n.toLowerCase() === 'naver') || wb.SheetNames[0];
       const ws = wb.Sheets[sheetName];
       const data = XLSX.utils.sheet_to_json(ws);
+      console.log('시트명:', wb.SheetNames);
+      console.log('컬럼명:', Object.keys(data[0] || {}));
       analyzeExcel(data, file.name);
     } catch(err) {
       document.getElementById('uploadResult').innerHTML = `<div class="err">⚠️ 파일 읽기 오류: ${err.message}</div>`;
