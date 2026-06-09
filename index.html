@@ -615,6 +615,39 @@ function copyText(text, btn) {
   });
 }
 window.copyText = copyText;
+
+// ========== API 키 자동 저장/불러오기 ==========
+function saveKeys() {
+  const keys = {
+    clientId: document.getElementById('clientId')?.value || '',
+    clientSecret: document.getElementById('clientSecret')?.value || '',
+    anthropicKey: document.getElementById('anthropicKey')?.value || '',
+    anthropicKey2: document.getElementById('anthropicKey2')?.value || ''
+  };
+  localStorage.setItem('smartstore_keys', JSON.stringify(keys));
+}
+
+function loadKeys() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('smartstore_keys') || '{}');
+    if (saved.clientId && document.getElementById('clientId')) document.getElementById('clientId').value = saved.clientId;
+    if (saved.clientSecret && document.getElementById('clientSecret')) document.getElementById('clientSecret').value = saved.clientSecret;
+    if (saved.anthropicKey && document.getElementById('anthropicKey')) document.getElementById('anthropicKey').value = saved.anthropicKey;
+    if (saved.anthropicKey2 && document.getElementById('anthropicKey2')) document.getElementById('anthropicKey2').value = saved.anthropicKey2;
+  } catch(e) {}
+}
+
+// 입력할 때마다 자동 저장
+document.addEventListener('DOMContentLoaded', () => {
+  loadKeys();
+  ['clientId','clientSecret','anthropicKey','anthropicKey2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', saveKeys);
+  });
+});
+
+// 페이지 로드 시 바로 불러오기
+loadKeys();
 </script>
 </body>
 </html>
