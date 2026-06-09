@@ -226,8 +226,6 @@ function handleFile(file) {
       const sheetName = wb.SheetNames.find(n => n.toLowerCase() === 'naver') || wb.SheetNames[0];
       const ws = wb.Sheets[sheetName];
       const data = XLSX.utils.sheet_to_json(ws);
-      console.log('시트명:', wb.SheetNames);
-      console.log('컬럼명:', Object.keys(data[0] || {}));
       analyzeExcel(data, file.name);
     } catch(err) {
       document.getElementById('uploadResult').innerHTML = `<div class="err">⚠️ 파일 읽기 오류: ${err.message}</div>`;
@@ -241,7 +239,7 @@ function analyzeExcel(data, filename) {
   const area = document.getElementById('uploadResult');
 
   // 셀러라이프 키워드 분석 파일인지 판별
-  const cols = Object.keys(data[0] || {});
+  const cols = Object.keys(data[0] || {}).map(c => c.replace(/[\n\r\s]/g,""));
   const isSeller = cols.some(c => c.includes('검색량') || c.includes('경쟁률') || c.includes('키워드'));
   const isSales = cols.some(c => c.includes('결제금액') || c.includes('결제수') || c.includes('상품명'));
 
