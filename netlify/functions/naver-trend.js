@@ -13,9 +13,12 @@ exports.handler = async function(event) {
   try {
     const { clientId, clientSecret, body: apiBody, endpoint } = JSON.parse(event.body);
 
-    const url = endpoint === 'search'
-      ? 'https://openapi.naver.com/v1/datalab/search'
-      : `https://openapi.naver.com/v1/datalab/${endpoint}`;
+    const urlMap = {
+      'search': 'https://openapi.naver.com/v1/datalab/search',
+      'shopping/category/keyword/rank': 'https://openapi.naver.com/v1/datalab/shopping/category/keyword/rank',
+    };
+
+    const url = urlMap[endpoint] || `https://openapi.naver.com/v1/datalab/${endpoint}`;
 
     const response = await fetch(url, {
       method: 'POST',
@@ -28,13 +31,9 @@ exports.handler = async function(event) {
     });
 
     const text = await response.text();
-
     let data;
-    try {
-      data = JSON.parse(text);
-    } catch(e) {
-      return { statusCode: 200, headers, body: JSON.stringify({ error: 'JSON 파싱 오류', raw: text.slice(0, 500) }) };
-    }
+    try { data = JSON.parse(text); }
+    catch(e) { return { statusCode: 200, headers, body: JSON.stringify({ error: 'JSON 파싱 오류', raw: text.slice(0, 500) }) }; }
 
     return { statusCode: 200, headers, body: JSON.stringify(data) };
   } catch(e) {
