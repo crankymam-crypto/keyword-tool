@@ -14,14 +14,11 @@
     --radius: 12px;
   }
   body { background: var(--bg); color: var(--text); font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; min-height: 100vh; }
-
   header { padding: 24px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 14px; }
   .logo { width: 38px; height: 38px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
   header h1 { font-size: 17px; font-weight: 600; }
   header .sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
-
   .main { max-width: 980px; margin: 0 auto; padding: 28px 20px; }
-
   .api-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 20px; }
   .api-card h2 { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.06em; }
   .api-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
@@ -30,22 +27,17 @@
   .api-field input { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-size: 13px; font-family: monospace; outline: none; transition: border 0.2s; }
   .api-field input:focus { border-color: var(--accent); }
   .save-hint { font-size: 11px; color: var(--text2); margin-top: 10px; }
-
   .btn { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; border: none; border-radius: 8px; padding: 10px 24px; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; white-space: nowrap; }
   .btn:hover { opacity: 0.85; }
   .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
   .cat-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
   .cat-btn { background: var(--bg2); border: 1px solid var(--border); border-radius: 20px; padding: 7px 16px; font-size: 13px; color: var(--text2); cursor: pointer; transition: all 0.2s; }
   .cat-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
   .cat-btn:hover:not(.active) { border-color: var(--accent); color: var(--text); }
-
   .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
   @media (max-width: 600px) { .result-grid { grid-template-columns: 1fr; } }
-
   .result-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
   .result-card h3 { font-size: 13px; color: var(--text2); margin-bottom: 14px; font-weight: 500; }
-
   .kw-list { list-style: none; }
   .kw-item { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); gap: 8px; }
   .kw-item:last-child { border-bottom: none; }
@@ -57,7 +49,6 @@
   .badge-stable { background: rgba(245,158,11,0.15); color: var(--amber); }
   .badge-blue { background: rgba(79,110,247,0.15); color: #7c9ef8; }
   .kw-score { font-size: 12px; color: var(--text2); min-width: 36px; text-align: right; }
-
   .table-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; overflow-x: auto; }
   .table-card h3 { font-size: 13px; color: var(--text2); margin-bottom: 14px; font-weight: 500; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 500px; }
@@ -67,15 +58,12 @@
   .cn { font-family: monospace; color: #a5b4fc; font-size: 13px; }
   .trend-bar { height: 6px; background: var(--bg3); border-radius: 3px; width: 80px; overflow: hidden; }
   .trend-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
-
   .copy-btn { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; font-size: 11px; color: var(--text2); cursor: pointer; transition: all 0.15s; }
   .copy-btn:hover { border-color: var(--accent); color: var(--text); }
   .copy-btn.done { color: var(--green); border-color: var(--green); }
-
   .loading { text-align: center; padding: 60px 0; color: var(--text2); }
   .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
   @keyframes spin { to { transform: rotate(360deg); } }
-
   .notice { background: rgba(79,110,247,0.08); border: 1px solid rgba(79,110,247,0.2); border-radius: 10px; padding: 12px 16px; font-size: 13px; color: #a5b4fc; margin-bottom: 20px; line-height: 1.7; }
   .err { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; padding: 14px 18px; font-size: 13px; color: #fca5a5; }
   .date-bar { font-size: 12px; color: var(--text2); margin-bottom: 18px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -91,7 +79,6 @@
     <div class="sub">네이버 쇼핑 트렌드 기반 · 매일 최신 데이터</div>
   </div>
 </header>
-
 <div class="main">
   <div class="api-card">
     <h2>🔑 네이버 API 설정</h2>
@@ -108,7 +95,6 @@
     </div>
     <div class="save-hint">⚠️ 키는 이 브라우저에서만 사용됩니다. 보안을 위해 공유하지 마세요.</div>
   </div>
-
   <div class="cat-row">
     <div class="cat-btn active" onclick="selectCat(this,'공구/산업용품')">⚙️ 공구/산업용품</div>
     <div class="cat-btn" onclick="selectCat(this,'농업/원예')">🌱 농업/원예</div>
@@ -117,13 +103,10 @@
     <div class="cat-btn" onclick="selectCat(this,'반려동물')">🐾 반려동물</div>
     <div class="cat-btn" onclick="selectCat(this,'포장용품')">📦 포장용품</div>
   </div>
-
   <div id="resultArea"></div>
 </div>
-
 <script>
 let selectedCat = '공구/산업용품';
-
 const KEYWORD_SETS = {
   '공구/산업용품': ['볼라드','스트레치필름','융스위치','그레이팅','절연장갑','작업복','공업용랩','수평몰탈','징크판넬','용접기'],
   '농업/원예':     ['잡초제거기','파종기','농업용분무기','물호스','텃밭도구','비닐멀칭','원예장갑','비닐하우스','접목기','농업용저울'],
@@ -132,7 +115,6 @@ const KEYWORD_SETS = {
   '반려동물':      ['강아지하네스','고양이스크래처','펫매트','강아지방석','고양이화장실','강아지장난감','고양이사료그릇','펫유모차','강아지옷','펫케어'],
   '포장용품':      ['에어캡','뽁뽁이','택배박스','포장테이프','완충재','에어필로우','포장지','스티로폼박스','지퍼백','OPP봉투']
 };
-
 const TAOBAO_MAP = {
   '볼라드':'路桩 防撞柱','스트레치필름':'缠绕膜 拉伸膜','융스위치':'熔断器开关',
   '그레이팅':'格栅板 钢格板','절연장갑':'绝缘手套 电工手套','작업복':'工作服套装',
@@ -153,28 +135,23 @@ const TAOBAO_MAP = {
   '완충재':'缓冲包装材料','에어필로우':'充气包装袋','포장지':'包装纸',
   '스티로폼박스':'泡沫箱','지퍼백':'自封袋','OPP봉투':'OPP自粘袋'
 };
-
 function selectCat(el, cat) {
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
   selectedCat = cat;
 }
-
 function getDateRange() {
-  const end = new Date();
-  const start = new Date();
+  const end = new Date(), start = new Date();
   start.setDate(end.getDate() - 30);
   const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   return { start: fmt(start), end: fmt(end) };
 }
-
 function getToday() {
   const d = new Date();
   return `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`;
 }
-
 async function callNaverAPI(clientId, clientSecret, endpoint, body) {
-  const res = await fetch('/api/naver-trend', {
+  const res = await fetch('/.netlify/functions/naver-trend', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ clientId, clientSecret, endpoint, body })
@@ -182,7 +159,6 @@ async function callNaverAPI(clientId, clientSecret, endpoint, body) {
   if (!res.ok) throw new Error(`서버 오류: ${res.status}`);
   return res.json();
 }
-
 function calcTrend(data) {
   if (!data || !data.results) return {};
   const result = {};
@@ -196,118 +172,62 @@ function calcTrend(data) {
   });
   return result;
 }
-
 function copyText(text, btn) {
   navigator.clipboard.writeText(text).then(() => {
-    btn.textContent = '복사됨 ✓';
-    btn.classList.add('done');
+    btn.textContent = '복사됨 ✓'; btn.classList.add('done');
     setTimeout(() => { btn.textContent = '복사'; btn.classList.remove('done'); }, 1500);
   });
 }
-
 async function runAnalysis() {
-  const clientId     = document.getElementById('clientId').value.trim();
+  const clientId = document.getElementById('clientId').value.trim();
   const clientSecret = document.getElementById('clientSecret').value.trim();
   if (!clientId || !clientSecret) { alert('Client ID와 Client Secret을 입력해주세요.'); return; }
-
   const btn = document.getElementById('runBtn');
   btn.disabled = true; btn.textContent = '분석 중...';
-  document.getElementById('resultArea').innerHTML = `<div class="loading"><div class="spinner"></div>키워드 트렌드 분석 중...</div>`;
-
+  document.getElementById('resultArea').innerHTML = '<div class="loading"><div class="spinner"></div>키워드 트렌드 분석 중...</div>';
   try {
     const keywords = KEYWORD_SETS[selectedCat];
     const { start, end } = getDateRange();
-
     const trendData = await callNaverAPI(clientId, clientSecret, 'search', {
       startDate: start, endDate: end, timeUnit: 'week',
       keywordGroups: keywords.map(kw => ({ groupName: kw, keywords: [kw] }))
     });
-
     const trends = calcTrend(trendData);
-    const sorted = keywords
-      .map(kw => ({ kw, ...(trends[kw] || { score: 0, trend: 0 }) }))
-      .sort((a, b) => b.score - a.score);
-
+    const sorted = keywords.map(kw => ({ kw, ...(trends[kw] || { score: 0, trend: 0 }) })).sort((a,b) => b.score - a.score);
     const maxScore = sorted[0]?.score || 1;
     const rising = sorted.filter(k => k.trend > 10).slice(0, 5);
     const stable = sorted.filter(k => k.score >= 20 && k.trend >= -10 && k.trend <= 10).slice(0, 5);
-
     document.getElementById('resultArea').innerHTML = `
-      <div class="date-bar">
-        📅 분석일 <span>${getToday()}</span>
-        카테고리 <span>${selectedCat}</span>
-        기간 <span>최근 30일</span>
-      </div>
-
-      <div class="notice">
-        💡 <strong>활용법:</strong> 🔥 급상승 → 지금 바로 타오바오 소싱 &nbsp;|&nbsp; 📈 안정 인기 → 재고 꾸준히 유지<br>
-        트렌드 점수는 네이버 검색량 기준 100점 만점입니다.
-      </div>
-
+      <div class="date-bar">📅 분석일 <span>${getToday()}</span> 카테고리 <span>${selectedCat}</span> 기간 <span>최근 30일</span></div>
+      <div class="notice">💡 <strong>활용법:</strong> 🔥 급상승 → 지금 바로 타오바오 소싱 &nbsp;|&nbsp; 📈 안정 인기 → 재고 꾸준히 유지<br>트렌드 점수는 네이버 검색량 기준 100점 만점입니다.</div>
       <div class="result-grid">
         <div class="result-card">
           <h3>🔥 급상승 키워드 — 지금 바로 소싱</h3>
-          ${rising.length === 0
-            ? '<p class="empty">이번 주 급상승 키워드 없음</p>'
-            : `<ul class="kw-list">${rising.map(k=>`
-                <li class="kw-item">
-                  <span class="kw-name">${k.kw}</span>
-                  <div class="kw-meta">
-                    <span class="badge badge-up">▲ ${k.trend}%</span>
-                    <span class="kw-score">${k.score}점</span>
-                  </div>
-                </li>`).join('')}</ul>`}
+          ${rising.length === 0 ? '<p class="empty">이번 주 급상승 키워드 없음</p>' : `<ul class="kw-list">${rising.map(k=>`<li class="kw-item"><span class="kw-name">${k.kw}</span><div class="kw-meta"><span class="badge badge-up">▲ ${k.trend}%</span><span class="kw-score">${k.score}점</span></div></li>`).join('')}</ul>`}
         </div>
         <div class="result-card">
           <h3>📈 안정 인기 키워드 — 재고 유지</h3>
-          ${stable.length === 0
-            ? '<p class="empty">해당 키워드 없음</p>'
-            : `<ul class="kw-list">${stable.map(k=>`
-                <li class="kw-item">
-                  <span class="kw-name">${k.kw}</span>
-                  <div class="kw-meta">
-                    <span class="badge badge-stable">안정</span>
-                    <span class="kw-score">${k.score}점</span>
-                  </div>
-                </li>`).join('')}</ul>`}
+          ${stable.length === 0 ? '<p class="empty">해당 키워드 없음</p>' : `<ul class="kw-list">${stable.map(k=>`<li class="kw-item"><span class="kw-name">${k.kw}</span><div class="kw-meta"><span class="badge badge-stable">안정</span><span class="kw-score">${k.score}점</span></div></li>`).join('')}</ul>`}
         </div>
       </div>
-
       <div class="table-card">
         <h3>📋 전체 키워드 순위</h3>
-        <table>
-          <tr><th>#</th><th>키워드</th><th>점수</th><th>변화율</th><th>트렌드</th></tr>
-          ${sorted.map((k,i)=>`
-            <tr>
-              <td style="color:var(--text2);font-size:12px">${i+1}</td>
-              <td style="font-weight:500">${k.kw}</td>
-              <td><span class="badge badge-blue">${k.score}점</span></td>
-              <td><span class="badge ${k.trend>10?'badge-up':k.trend<-10?'badge-down':'badge-stable'}">${k.trend>0?'▲':k.trend<0?'▼':'-'} ${Math.abs(k.trend)}%</span></td>
-              <td><div class="trend-bar"><div class="trend-fill" style="width:${Math.round(k.score/maxScore*100)}%"></div></div></td>
-            </tr>`).join('')}
+        <table><tr><th>#</th><th>키워드</th><th>점수</th><th>변화율</th><th>트렌드</th></tr>
+        ${sorted.map((k,i)=>`<tr><td style="color:var(--text2);font-size:12px">${i+1}</td><td style="font-weight:500">${k.kw}</td><td><span class="badge badge-blue">${k.score}점</span></td><td><span class="badge ${k.trend>10?'badge-up':k.trend<-10?'badge-down':'badge-stable'}">${k.trend>0?'▲':k.trend<0?'▼':'-'} ${Math.abs(k.trend)}%</span></td><td><div class="trend-bar"><div class="trend-fill" style="width:${Math.round(k.score/maxScore*100)}%"></div></div></td></tr>`).join('')}
         </table>
       </div>
-
       <div class="table-card">
         <h3>🔤 타오바오 검색어 — 복사해서 바로 사용</h3>
-        <table>
-          <tr><th style="width:120px">키워드</th><th>타오바오 검색어</th><th style="width:70px"></th></tr>
-          ${sorted.map(k=>`
-            <tr>
-              <td style="font-weight:500">${k.kw}</td>
-              <td class="cn">${TAOBAO_MAP[k.kw]||'-'}</td>
-              <td>${TAOBAO_MAP[k.kw]?`<button class="copy-btn" onclick="copyText('${TAOBAO_MAP[k.kw]}',this)">복사</button>`:''}</td>
-            </tr>`).join('')}
+        <table><tr><th style="width:120px">키워드</th><th>타오바오 검색어</th><th style="width:70px"></th></tr>
+        ${sorted.map(k=>`<tr><td style="font-weight:500">${k.kw}</td><td class="cn">${TAOBAO_MAP[k.kw]||'-'}</td><td>${TAOBAO_MAP[k.kw]?`<button class="copy-btn" onclick="copyText('${TAOBAO_MAP[k.kw]}',this)">복사</button>`:''}</td></tr>`).join('')}
         </table>
-      </div>
-    `;
+      </div>`;
   } catch(e) {
     document.getElementById('resultArea').innerHTML = `<div class="err">⚠️ 오류: ${e.message}<br>API 키를 확인하거나 잠시 후 다시 시도해주세요.</div>`;
   } finally {
     btn.disabled = false; btn.textContent = '🔍 분석 시작';
   }
 }
-
 window.copyText = copyText;
 </script>
 </body>
