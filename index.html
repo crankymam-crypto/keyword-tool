@@ -318,7 +318,7 @@ async function analyzeKeywordFile(data, filename, area) {
 
   const kwCol = row => row["키워드"] !== undefined ? row["키워드"] : (getCol(row,"키워드") || "");
 
-  const allKeywords = filtered.slice(0,50).map(r => kwCol(r)).filter(kw => kw);
+  const allKeywords = filtered.slice(0,30).map(r => kwCol(r)).filter(kw => kw);
   const newKeywords = allKeywords.filter(kw => !TAOBAO_MAP[kw]);
   const anthropicKey = (document.getElementById('anthropicKey2') || document.getElementById('anthropicKey') || {}).value?.trim();
 
@@ -336,7 +336,7 @@ async function analyzeKeywordFile(data, filename, area) {
           endpoint: 'anthropic',
           body: {
             model: 'claude-haiku-4-5-20251001',
-            max_tokens: 2000,
+            max_tokens: 4000,
             messages: [{
               role: 'user',
               content: `아래 키워드 목록을 분석해주세요.
@@ -395,7 +395,7 @@ async function analyzeKeywordFile(data, filename, area) {
   const safeFiltered = filtered.slice(0,50).filter(row => {
     const kw = kwCol(row);
     const status = trademarkSafe[kw];
-    return status !== '위험';
+    return status !== '위험' && status !== '주의';
   });
 
   area.innerHTML = `
@@ -415,7 +415,7 @@ async function analyzeKeywordFile(data, filename, area) {
           const tb = TAOBAO_MAP[kw];
           return `<tr>
             <td style="color:var(--text2);font-size:12px">${i+1}</td>
-            <td style="font-weight:500">${kw} ${!tb?'<span class="badge badge-new">신규</span>':''} ${tmStatus==='주의'?'<span class="badge badge-warn">⚠️주의</span>':''}</td>
+            <td style="font-weight:500">${kw} ${!tb?'<span class="badge badge-new">신규</span>':''}</td>
             <td>${search}</td>
             <td><span class="badge ${parseFloat(comp)<5?'badge-green':'badge-stable'}">${comp}</span></td>
             <td>${price}원</td>
