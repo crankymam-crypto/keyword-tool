@@ -368,11 +368,14 @@ async function analyzeKeywordFile(data, filename, area) {
             console.log('상표권 체크 완료:', Object.keys(trademarkSafe).length + '개');
           }
           if (parsed['검색어']) {
-            // 키 공백 제거 후 저장
             Object.entries(parsed['검색어']).forEach(([k, v]) => {
               TAOBAO_MAP[k.trim()] = v;
             });
             console.log('타오바오 검색어 추가:', Object.keys(parsed['검색어']).length + '개');
+            // 매칭 확인
+            allKeywords.forEach(kw => {
+              if (!TAOBAO_MAP[kw]) console.log('매칭 실패:', JSON.stringify(kw));
+            });
           }
         } catch(e) { console.log('JSON 파싱 오류:', e.message); }
       }
