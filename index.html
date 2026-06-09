@@ -159,6 +159,20 @@ async function callNaverAPI(clientId, clientSecret, endpoint, body) {
   if (!res.ok) throw new Error(`서버 오류: ${res.status}`);
   return res.json();
 }
+
+async function callNaverAPIBatch(clientId, clientSecret, keywords, start, end) {
+  const chunk1 = keywords.slice(0, 5);
+  const chunk2 = keywords.slice(5, 10);
+  const makeBody = (kws) => ({
+    startDate: start, endDate: end, timeUnit: 'week',
+    keywordGroups: kws.map(kw => ({ groupName: kw, keywords: [kw] }))
+  });
+  const [res1, res2] = await Promise.all([
+    callNaverAPI(clientId, clientSecret, 'search', makeBody(chunk1)),
+    callNaverAPI(clientId, clientSecret, 'search', makeBody(chunk2))
+  ]);
+  return { results: [...(res1.results || []), ...(res2.results || [])] };
+}
 function calcTrend(data) {
   if (!data || !data.results) return {};
   const result = {};
@@ -188,10 +202,7 @@ async function runAnalysis() {
   try {
     const keywords = KEYWORD_SETS[selectedCat];
     const { start, end } = getDateRange();
-    const trendData = await callNaverAPI(clientId, clientSecret, 'search', {
-      startDate: start, endDate: end, timeUnit: 'week',
-      keywordGroups: keywords.map(kw => ({ groupName: kw, keywords: [kw] }))
-    });
+    const trendData = await callNaverAPIBatch(clientId, clientSecret, keywords, start, end);
     const trends = calcTrend(trendData);
     const sorted = keywords.map(kw => ({ kw, ...(trends[kw] || { score: 0, trend: 0 }) })).sort((a,b) => b.score - a.score);
     const maxScore = sorted[0]?.score || 1;
