@@ -251,10 +251,9 @@ function handleFile(file) {
   zone.innerHTML = '<div class="upload-icon">⏳</div><div class="upload-title">분석 중...</div>';
 
   const reader = new FileReader();
-  reader.onload = function(e) {
+  reader.onload = async function(e) {
     try {
       const wb = XLSX.read(e.target.result, { type: 'array' });
-      // naver 시트 우선, 없으면 첫번째 시트
       const sheetName = wb.SheetNames.find(n => n.toLowerCase() === 'naver') || wb.SheetNames[0];
       const ws = wb.Sheets[sheetName];
       const data = XLSX.utils.sheet_to_json(ws);
