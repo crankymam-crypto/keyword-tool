@@ -222,7 +222,9 @@ function handleFile(file) {
   reader.onload = function(e) {
     try {
       const wb = XLSX.read(e.target.result, { type: 'array' });
-      const ws = wb.Sheets[wb.SheetNames[0]];
+      // naver 시트 우선, 없으면 첫번째 시트
+      const sheetName = wb.SheetNames.find(n => n.toLowerCase() === 'naver') || wb.SheetNames[0];
+      const ws = wb.Sheets[sheetName];
       const data = XLSX.utils.sheet_to_json(ws);
       analyzeExcel(data, file.name);
     } catch(err) {
