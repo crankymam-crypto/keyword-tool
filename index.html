@@ -365,38 +365,32 @@ async function analyzeKeywordFile(data, filename, area) {
         })
       });
       const resData = await res.json();
-      const text = resData.content?.[0]?.text || '{}';
-      // 코드블록 제거 후 JSON 파싱
-      const cleaned = text.replace(/```json\n?|```/g, '').trim();
-      const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        try {
-          const parsed = JSON.parse(jsonMatch[0]);
-          if (parsed['상표권']) {
-            trademarkSafe = parsed['상표권'];
-            console.log('상표권 체크 완료:', Object.keys(trademarkSafe).length + '개');
+      const text = resData.content?.[0]?.text || '';
+      // JSON 파싱 대신 정규식으로 직접 추출 (깨진 JSON 대응)
+      const result = { '상표권': {}, '검색어': {} };
+      let section = '';
+      for (const line of text.split(/[,\n]+/)) {
+        if (line.includes('"상표권"')) { section = '상표권'; continue; }
+        if (line.includes('"검색어"')) { section = '검색어'; continue; }
+        const m = line.match(/"([^"\u0000-\u001f\ufffd]+)"\s*:\s*"([^"\u0000-\u001f\ufffd]+)"/);
+        if (m && section && m[1] && m[2]) result[section][m[1].trim()] = m[2];
+      }
+      if (Object.keys(result['상표권']).length > 0) {
+        Object.assign(trademarkSafe, result['상표권']);
+        console.log('상표권 체크 완료:', Object.keys(result['상표권']).length + '개');
+      }
+      if (Object.keys(result['검색어']).length > 0) {
+        Object.entries(result['검색어']).forEach(([k, v]) => { TAOBAO_MAP[k.trim()] = v; });
+        console.log('타오바오 검색어 추가:', Object.keys(result['검색어']).length + '개');
+        allKeywords.forEach(kw => {
+          if (!TAOBAO_MAP[kw]) {
+            const similar = Object.keys(TAOBAO_MAP).find(k =>
+              k.slice(0,3) === kw.slice(0,3) && Math.abs(k.length - kw.length) <= 2
+            );
+            if (similar) { TAOBAO_MAP[kw] = TAOBAO_MAP[similar]; console.log('키 매핑 수정:', kw, '←', similar); }
           }
-          if (parsed['검색어']) {
-            Object.entries(parsed['검색어']).forEach(([k, v]) => {
-              TAOBAO_MAP[k.trim()] = v;
-            });
-            console.log('타오바오 검색어 추가:', Object.keys(parsed['검색어']).length + '개');
-            // 매칭 확인
-            // 한자 혼입 키 정규화 - 원본 키워드와 유사한 키 찾아서 매핑
-            allKeywords.forEach(kw => {
-              if (!TAOBAO_MAP[kw]) {
-                // TAOBAO_MAP에서 비슷한 키 찾기 (앞 2글자 일치)
-                const similar = Object.keys(TAOBAO_MAP).find(k => 
-                  k.slice(0,3) === kw.slice(0,3) && Math.abs(k.length - kw.length) <= 2
-                );
-                if (similar) {
-                  TAOBAO_MAP[kw] = TAOBAO_MAP[similar];
-                  console.log('키 매핑 수정:', kw, '←', similar);
-                }
-              }
-            });
-          }
-        } catch(e) { console.log('JSON 파싱 오류:', e.message); }
+        });
+      }
       }
     } catch(e) {
       console.log('Claude API 오류:', e.message);
