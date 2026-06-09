@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>스마트스토어 키워드 분석툴</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -19,37 +20,65 @@
   header h1 { font-size: 17px; font-weight: 600; }
   header .sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
   .main { max-width: 980px; margin: 0 auto; padding: 28px 20px; }
-  .api-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 20px; }
-  .api-card h2 { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* 탭 */
+  .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: var(--bg2); border-radius: 10px; padding: 4px; border: 1px solid var(--border); }
+  .tab { flex: 1; padding: 10px; text-align: center; font-size: 13px; font-weight: 500; color: var(--text2); cursor: pointer; border-radius: 8px; transition: all 0.2s; }
+  .tab.active { background: var(--accent); color: #fff; }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* 공통 카드 */
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 20px; }
+  .card h2 { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* 업로드 영역 */
+  .upload-zone { border: 2px dashed var(--border); border-radius: var(--radius); padding: 40px; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 20px; }
+  .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: rgba(79,110,247,0.05); }
+  .upload-icon { font-size: 36px; margin-bottom: 12px; }
+  .upload-title { font-size: 15px; font-weight: 500; margin-bottom: 6px; }
+  .upload-sub { font-size: 13px; color: var(--text2); }
+  #fileInput { display: none; }
+
+  /* API 설정 */
   .api-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
   .api-field { flex: 1; min-width: 180px; }
   .api-field label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 6px; }
   .api-field input { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-size: 13px; font-family: monospace; outline: none; transition: border 0.2s; }
   .api-field input:focus { border-color: var(--accent); }
   .save-hint { font-size: 11px; color: var(--text2); margin-top: 10px; }
+
   .btn { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; border: none; border-radius: 8px; padding: 10px 24px; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; white-space: nowrap; }
   .btn:hover { opacity: 0.85; }
   .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-outline { background: transparent; border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; padding: 10px 24px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+  .btn-outline:hover { background: rgba(79,110,247,0.1); }
+
   .cat-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
   .cat-btn { background: var(--bg2); border: 1px solid var(--border); border-radius: 20px; padding: 7px 16px; font-size: 13px; color: var(--text2); cursor: pointer; transition: all 0.2s; }
   .cat-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
-  .cat-btn:hover:not(.active) { border-color: var(--accent); color: var(--text); }
+
   .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
   @media (max-width: 600px) { .result-grid { grid-template-columns: 1fr; } }
   .result-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
   .result-card h3 { font-size: 13px; color: var(--text2); margin-bottom: 14px; font-weight: 500; }
+
   .kw-list { list-style: none; }
   .kw-item { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); gap: 8px; }
   .kw-item:last-child { border-bottom: none; }
   .kw-name { font-size: 14px; font-weight: 500; flex: 1; }
   .kw-meta { display: flex; gap: 6px; align-items: center; }
+
   .badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 600; white-space: nowrap; }
   .badge-up { background: rgba(16,185,129,0.15); color: var(--green); }
   .badge-down { background: rgba(239,68,68,0.15); color: var(--red); }
   .badge-stable { background: rgba(245,158,11,0.15); color: var(--amber); }
   .badge-blue { background: rgba(79,110,247,0.15); color: #7c9ef8; }
   .badge-new { background: rgba(124,58,237,0.15); color: #a78bfa; }
-  .kw-score { font-size: 12px; color: var(--text2); min-width: 36px; text-align: right; }
+  .badge-warn { background: rgba(239,68,68,0.15); color: var(--red); }
+  .badge-green { background: rgba(16,185,129,0.15); color: var(--green); }
+
   .table-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; overflow-x: auto; }
   .table-card h3 { font-size: 13px; color: var(--text2); margin-bottom: 14px; font-weight: 500; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 500px; }
@@ -59,18 +88,31 @@
   .cn { font-family: monospace; color: #a5b4fc; font-size: 13px; }
   .trend-bar { height: 6px; background: var(--bg3); border-radius: 3px; width: 80px; overflow: hidden; }
   .trend-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+  .trend-fill-red { background: linear-gradient(90deg, var(--red), #f97316); }
+
   .copy-btn { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; font-size: 11px; color: var(--text2); cursor: pointer; transition: all 0.15s; }
   .copy-btn:hover { border-color: var(--accent); color: var(--text); }
   .copy-btn.done { color: var(--green); border-color: var(--green); }
+
   .loading { text-align: center; padding: 60px 0; color: var(--text2); }
   .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
   @keyframes spin { to { transform: rotate(360deg); } }
+
   .notice { background: rgba(79,110,247,0.08); border: 1px solid rgba(79,110,247,0.2); border-radius: 10px; padding: 12px 16px; font-size: 13px; color: #a5b4fc; margin-bottom: 20px; line-height: 1.7; }
-  .err { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; padding: 14px 18px; font-size: 13px; color: #fca5a5; }
+  .notice-green { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); color: #6ee7b7; }
+  .err { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; padding: 14px 18px; font-size: 13px; color: #fca5a5; margin-bottom: 16px; }
   .date-bar { font-size: 12px; color: var(--text2); margin-bottom: 18px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .date-bar span { background: var(--bg3); border-radius: 6px; padding: 3px 10px; }
   .empty { color: var(--text2); font-size: 13px; padding: 8px 0; }
-  .section-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin: 20px 0 10px; font-weight: 500; }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  @media (max-width: 600px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+  .stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .stat-label { font-size: 11px; color: var(--text2); margin-bottom: 6px; }
+  .stat-value { font-size: 22px; font-weight: 600; }
+  .stat-value.red { color: var(--red); }
+  .stat-value.green { color: var(--green); }
+  .stat-value.amber { color: var(--amber); }
 </style>
 </head>
 <body>
@@ -78,39 +120,67 @@
   <div class="logo">📊</div>
   <div>
     <h1>스마트스토어 키워드 분석툴</h1>
-    <div class="sub">네이버 쇼핑인사이트 기반 · 실시간 인기 키워드 자동 발굴</div>
+    <div class="sub">셀러라이프 엑셀 자동분석 + 네이버 트렌드 모니터링</div>
   </div>
 </header>
 <div class="main">
-  <div class="api-card">
-    <h2>🔑 네이버 API 설정</h2>
-    <div class="api-row">
-      <div class="api-field">
-        <label>Client ID</label>
-        <input type="text" id="clientId" placeholder="Client ID 입력" />
-      </div>
-      <div class="api-field">
-        <label>Client Secret</label>
-        <input type="password" id="clientSecret" placeholder="Client Secret 입력" />
-      </div>
-      <button class="btn" id="runBtn" onclick="runAnalysis()">🔍 분석 시작</button>
-    </div>
-    <div class="save-hint">⚠️ 키는 이 브라우저에서만 사용됩니다. 보안을 위해 공유하지 마세요.</div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('upload')">📂 셀러라이프 엑셀 분석</div>
+    <div class="tab" onclick="switchTab('trend')">📈 네이버 트렌드 모니터링</div>
   </div>
-  <div class="cat-row">
-    <div class="cat-btn active" onclick="selectCat(this,'50000167','공구/산업용품')">⚙️ 공구/산업용품</div>
-    <div class="cat-btn" onclick="selectCat(this,'50000174','농업/원예')">🌱 농업/원예</div>
-    <div class="cat-btn" onclick="selectCat(this,'50000006','자동차용품')">🚗 자동차용품</div>
-    <div class="cat-btn" onclick="selectCat(this,'50000075','캠핑/아웃도어')">⛺ 캠핑/아웃도어</div>
-    <div class="cat-btn" onclick="selectCat(this,'50000145','반려동물')">🐾 반려동물</div>
-    <div class="cat-btn" onclick="selectCat(this,'50000100','포장/산업용품')">📦 포장용품</div>
-  </div>
-  <div id="resultArea"></div>
-</div>
-<script>
-let selectedCatId = '50000167';
-let selectedCatName = '공구/산업용품';
 
+  <!-- 탭1: 엑셀 업로드 분석 -->
+  <div id="tab-upload" class="tab-content active">
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()"
+      ondragover="event.preventDefault();this.classList.add('drag')"
+      ondragleave="this.classList.remove('drag')"
+      ondrop="handleDrop(event)">
+      <div class="upload-icon">📥</div>
+      <div class="upload-title">셀러라이프 엑셀 파일을 여기에 끌어다 놓으세요</div>
+      <div class="upload-sub">또는 클릭해서 파일 선택 · .xlsx 파일만 지원</div>
+    </div>
+    <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="handleFile(this.files[0])">
+    <div id="uploadResult"></div>
+  </div>
+
+  <!-- 탭2: 네이버 트렌드 -->
+  <div id="tab-trend" class="tab-content">
+    <div class="card">
+      <h2>🔑 네이버 API 설정</h2>
+      <div class="api-row">
+        <div class="api-field">
+          <label>Client ID</label>
+          <input type="text" id="clientId" placeholder="Client ID 입력" />
+        </div>
+        <div class="api-field">
+          <label>Client Secret</label>
+          <input type="password" id="clientSecret" placeholder="Client Secret 입력" />
+        </div>
+        <button class="btn" id="runBtn" onclick="runTrend()">🔍 분석 시작</button>
+      </div>
+      <div class="save-hint">⚠️ 키는 이 브라우저에서만 사용됩니다.</div>
+    </div>
+    <div class="cat-row">
+      <div class="cat-btn active" onclick="selectCat(this,'공구/산업용품')">⚙️ 공구/산업용품</div>
+      <div class="cat-btn" onclick="selectCat(this,'농업/원예')">🌱 농업/원예</div>
+      <div class="cat-btn" onclick="selectCat(this,'자동차용품')">🚗 자동차용품</div>
+      <div class="cat-btn" onclick="selectCat(this,'캠핑/아웃도어')">⛺ 캠핑/아웃도어</div>
+      <div class="cat-btn" onclick="selectCat(this,'반려동물')">🐾 반려동물</div>
+      <div class="cat-btn" onclick="selectCat(this,'포장용품')">📦 포장용품</div>
+    </div>
+    <div id="trendResult"></div>
+  </div>
+</div>
+
+<script>
+// ========== 탭 전환 ==========
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['upload','trend'][i] === tab));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+
+// ========== 타오바오 매핑 ==========
 const TAOBAO_MAP = {
   '볼라드':'路桩 防撞柱','스트레치필름':'缠绕膜 拉伸膜','융스위치':'熔断器开关',
   '그레이팅':'格栅板 钢格板','절연장갑':'绝缘手套 电工手套','작업복':'工作服套装',
@@ -129,14 +199,212 @@ const TAOBAO_MAP = {
   '고양이사료그릇':'猫咪食盆','펫유모차':'宠物推车','강아지옷':'狗狗衣服','펫케어':'宠物护理用品',
   '에어캡':'气泡膜 泡泡纸','뽁뽁이':'气泡袋','택배박스':'快递纸箱','포장테이프':'打包胶带',
   '완충재':'缓冲包装材料','에어필로우':'充气包装袋','포장지':'包装纸',
-  '스티로폼박스':'泡沫箱','지퍼백':'自封袋','OPP봉투':'OPP自粘袋'
+  '스티로폼박스':'泡沫箱','지퍼백':'自封袋','OPP봉투':'OPP自粘袋',
+  '오일스테인':'木材染色剂 油性','증류수':'蒸馏水 纯净水','보강토블럭':'挡土墙砖',
+  '보도블럭':'人行道砖 透水砖','조립식판넬':'组合式彩钢板','체감온도계':'温湿度计',
+  '절연장갑':'绝缘手套 电工手套','h7장갑':'防切割手套','물호스50m':'水管软管 浇水管50米'
 };
 
-function selectCat(el, catId, catName) {
+// ========== 엑셀 업로드 분석 ==========
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('uploadZone').classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+}
+
+function handleFile(file) {
+  if (!file) return;
+  const zone = document.getElementById('uploadZone');
+  zone.innerHTML = '<div class="upload-icon">⏳</div><div class="upload-title">분석 중...</div>';
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(ws);
+      analyzeExcel(data, file.name);
+    } catch(err) {
+      document.getElementById('uploadResult').innerHTML = `<div class="err">⚠️ 파일 읽기 오류: ${err.message}</div>`;
+    }
+    zone.innerHTML = '<div class="upload-icon">📥</div><div class="upload-title">다른 파일 분석하기</div><div class="upload-sub">클릭 또는 드래그앤드롭</div>';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function analyzeExcel(data, filename) {
+  const area = document.getElementById('uploadResult');
+
+  // 셀러라이프 키워드 분석 파일인지 판별
+  const cols = Object.keys(data[0] || {});
+  const isSeller = cols.some(c => c.includes('검색량') || c.includes('경쟁률') || c.includes('키워드'));
+  const isSales = cols.some(c => c.includes('결제금액') || c.includes('결제수') || c.includes('상품명'));
+
+  if (isSeller) {
+    analyzeKeywordFile(data, filename, area);
+  } else if (isSales) {
+    analyzeSalesFile(data, filename, area);
+  } else {
+    area.innerHTML = `<div class="err">⚠️ 인식할 수 없는 파일 형식입니다.<br>셀러라이프 키워드 분석 파일 또는 스마트스토어 상품성과 파일을 올려주세요.</div>`;
+  }
+}
+
+function analyzeKeywordFile(data, filename, area) {
+  // 컬럼명 정규화
+  const normalized = data.map(row => {
+    const r = {};
+    Object.keys(row).forEach(k => { r[k.replace(/\n/g,' ').trim()] = row[k]; });
+    return r;
+  });
+
+  const getCol = (row, ...keys) => {
+    for (const k of keys) {
+      const found = Object.keys(row).find(c => c.includes(k));
+      if (found !== undefined) return row[found];
+    }
+    return null;
+  };
+
+  // 블루오션 필터
+  const filtered = normalized.filter(row => {
+    const search = parseFloat(getCol(row,'검색량','최근')) || 0;
+    const comp = parseFloat(getCol(row,'경쟁률')) || 999;
+    const price = parseFloat(getCol(row,'평균가')) || 0;
+    const brand = getCol(row,'브랜드') || '';
+    const overseas = parseFloat(getCol(row,'해외배송')) || 1;
+    return search >= 500 && search <= 30000 && comp <= 15 && price >= 15000 && brand !== 'O' && overseas <= 0.1;
+  });
+
+  filtered.sort((a,b) => (parseFloat(getCol(b,'경쟁률'))||999) - (parseFloat(getCol(a,'경쟁률'))||999) );
+
+  const getToday = () => { const d=new Date(); return `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`; };
+
+  const kwCol = row => getCol(row,'키워드') || '';
+
+  area.innerHTML = `
+    <div class="date-bar">📅 분석일 <span>${getToday()}</span> 파일 <span>${filename}</span> 전체 <span>${data.length}개 키워드</span> 블루오션 <span>${filtered.length}개</span></div>
+    <div class="notice notice-green">✅ 블루오션 조건: 월검색량 500~30,000 · 경쟁률 15 이하 · 평균가 15,000원 이상 · 비브랜드 · 해외배송 10% 이하</div>
+
+    <div class="table-card">
+      <h3>🎯 즉시 소싱 추천 키워드 TOP ${Math.min(filtered.length, 30)}개</h3>
+      <table>
+        <tr><th>#</th><th>키워드</th><th>월검색량</th><th>경쟁률</th><th>평균가</th><th>타오바오 검색어</th><th></th></tr>
+        ${filtered.slice(0,30).map((row,i) => {
+          const kw = kwCol(row);
+          const search = Math.round(parseFloat(getCol(row,'검색량','최근'))||0).toLocaleString();
+          const comp = (parseFloat(getCol(row,'경쟁률'))||0).toFixed(1);
+          const price = Math.round(parseFloat(getCol(row,'평균가'))||0).toLocaleString();
+          const tb = TAOBAO_MAP[kw];
+          return `<tr>
+            <td style="color:var(--text2);font-size:12px">${i+1}</td>
+            <td style="font-weight:500">${kw} ${!tb?'<span class="badge badge-new">신규</span>':''}</td>
+            <td>${search}</td>
+            <td><span class="badge ${parseFloat(comp)<5?'badge-green':'badge-stable'}">${comp}</span></td>
+            <td>${price}원</td>
+            <td class="cn">${tb||'<span style="color:var(--text2)">문의</span>'}</td>
+            <td>${tb?`<button class="copy-btn" onclick="copyText('${tb}',this)">복사</button>`:''}</td>
+          </tr>`;
+        }).join('')}
+      </table>
+    </div>
+
+    ${filtered.length === 0 ? '<div class="err">⚠️ 블루오션 조건에 맞는 키워드가 없습니다. 조건을 조정해보세요.</div>' : ''}
+  `;
+}
+
+function analyzeSalesFile(data, filename, area) {
+  const normalized = data.map(row => {
+    const r = {};
+    Object.keys(row).forEach(k => { r[k.replace(/\n/g,' ').trim()] = row[k]; });
+    return r;
+  });
+
+  const getCol = (row, ...keys) => {
+    for (const k of keys) {
+      const found = Object.keys(row).find(c => c.includes(k));
+      if (found !== undefined) return row[found];
+    }
+    return null;
+  };
+
+  const total = normalized.reduce((s,r) => s + (parseFloat(getCol(r,'결제금액'))||0), 0);
+  const totalRefund = normalized.reduce((s,r) => s + (parseFloat(getCol(r,'환불금액'))||0), 0);
+  const totalOrders = normalized.reduce((s,r) => s + (parseFloat(getCol(r,'결제수'))||0), 0);
+  const real = total - totalRefund;
+  const refundRate = total > 0 ? (totalRefund/total*100).toFixed(1) : 0;
+
+  normalized.forEach(r => { r['_실매출'] = (parseFloat(getCol(r,'결제금액'))||0) - (parseFloat(getCol(r,'환불금액'))||0); });
+  const sorted = [...normalized].sort((a,b) => b['_실매출'] - a['_실매출']);
+  const highRefund = normalized.filter(r => (parseFloat(getCol(r,'환불비율','환불율'))||0) >= 0.5).sort((a,b) => (parseFloat(getCol(b,'환불금액'))||0) - (parseFloat(getCol(a,'환불금액'))||0));
+
+  const fmt = n => Math.round(n).toLocaleString();
+  const getToday = () => { const d=new Date(); return `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`; };
+
+  area.innerHTML = `
+    <div class="date-bar">📅 분석일 <span>${getToday()}</span> 파일 <span>${filename}</span></div>
+
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-label">총 결제금액</div><div class="stat-value">${fmt(total/10000)}만원</div></div>
+      <div class="stat-card"><div class="stat-label">실매출 (환불제외)</div><div class="stat-value green">${fmt(real/10000)}만원</div></div>
+      <div class="stat-card"><div class="stat-label">환불금액</div><div class="stat-value red">${fmt(totalRefund/10000)}만원</div></div>
+      <div class="stat-card"><div class="stat-label">환불율</div><div class="stat-value ${refundRate>20?'red':'amber'}">${refundRate}%</div></div>
+    </div>
+
+    <div class="result-grid">
+      <div class="table-card" style="margin-bottom:0">
+        <h3>⭐ 실매출 TOP 10 상품</h3>
+        <table>
+          <tr><th>#</th><th>상품명</th><th>실매출</th><th>환불율</th></tr>
+          ${sorted.slice(0,10).map((row,i) => {
+            const name = (getCol(row,'상품명')||'').slice(0,20);
+            const real = row['_실매출'];
+            const refRate = ((parseFloat(getCol(row,'환불비율','환불율'))||0)*100).toFixed(0);
+            return `<tr>
+              <td style="color:var(--text2);font-size:12px">${i+1}</td>
+              <td style="font-weight:500;font-size:12px">${name}</td>
+              <td>${fmt(real)}원</td>
+              <td><span class="badge ${refRate>30?'badge-warn':'badge-green'}">${refRate}%</span></td>
+            </tr>`;
+          }).join('')}
+        </table>
+      </div>
+      <div class="table-card" style="margin-bottom:0">
+        <h3>🚨 즉시 삭제 대상 (환불 50% 이상)</h3>
+        ${highRefund.length === 0 ? '<p class="empty">환불 50% 이상 상품 없음 ✅</p>' : `
+        <table>
+          <tr><th>상품명</th><th>환불손실</th><th>환불율</th></tr>
+          ${highRefund.slice(0,10).map(row => {
+            const name = (getCol(row,'상품명')||'').slice(0,20);
+            const refund = parseFloat(getCol(row,'환불금액'))||0;
+            const refRate = ((parseFloat(getCol(row,'환불비율','환불율'))||0)*100).toFixed(0);
+            return `<tr>
+              <td style="font-size:12px">${name}</td>
+              <td style="color:var(--red)">${fmt(refund)}원</td>
+              <td><span class="badge badge-warn">${refRate}%</span></td>
+            </tr>`;
+          }).join('')}
+        </table>`}
+      </div>
+    </div>
+  `;
+}
+
+// ========== 네이버 트렌드 ==========
+let selectedCat = '공구/산업용품';
+const KEYWORD_SETS = {
+  '공구/산업용품': ['볼라드','스트레치필름','융스위치','그레이팅','절연장갑','작업복','공업용랩','수평몰탈','징크판넬','용접기'],
+  '농업/원예':     ['잡초제거기','파종기','농업용분무기','물호스','텃밭도구','비닐멀칭','원예장갑','비닐하우스','접목기','농업용저울'],
+  '자동차용품':    ['차량용수납','자동차트레이','차량용정리함','차량용청소기','주차블럭','카매트','자동차햇빛가리개','휠커버','세차용품','자동차방향제'],
+  '캠핑/아웃도어': ['캠핑릴선','캠핑테이블','캠핑의자','타프','캠핑랜턴','캠핑매트','캠핑버너','해먹','글램핑용품','캠핑가방'],
+  '반려동물':      ['강아지하네스','고양이스크래처','펫매트','강아지방석','고양이화장실','강아지장난감','고양이사료그릇','펫유모차','강아지옷','펫케어'],
+  '포장용품':      ['에어캡','뽁뽁이','택배박스','포장테이프','완충재','에어필로우','포장지','스티로폼박스','지퍼백','OPP봉투']
+};
+
+function selectCat(el, cat) {
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
-  selectedCatId = catId;
-  selectedCatName = catName;
+  selectedCat = cat;
 }
 
 function getDateRange() {
@@ -159,22 +427,6 @@ async function callAPI(clientId, clientSecret, endpoint, body) {
   });
   if (!res.ok) throw new Error(`서버 오류: ${res.status}`);
   return res.json();
-}
-
-async function fetchTopKeywords(clientId, clientSecret, catId, start, end) {
-  const data = await callAPI(clientId, clientSecret, 'shopping/category/keyword/rank', {
-    startDate: start,
-    endDate: end,
-    timeUnit: 'date',
-    category: catId,
-    keyword: '',
-    device: '',
-    gender: '',
-    ages: []
-  });
-  if (!data || !data.results || !data.results[0]) return [];
-  const ranks = data.results[0].data || [];
-  return [...new Set(ranks.map(r => r.keyword))].slice(0, 20);
 }
 
 async function fetchTrendBatch(clientId, clientSecret, keywords, start, end) {
@@ -205,89 +457,65 @@ function calcTrend(data) {
   return result;
 }
 
-function copyText(text, btn) {
-  navigator.clipboard.writeText(text).then(() => {
-    btn.textContent = '복사됨 ✓'; btn.classList.add('done');
-    setTimeout(() => { btn.textContent = '복사'; btn.classList.remove('done'); }, 1500);
-  });
-}
-
-async function runAnalysis() {
+async function runTrend() {
   const clientId = document.getElementById('clientId').value.trim();
   const clientSecret = document.getElementById('clientSecret').value.trim();
   if (!clientId || !clientSecret) { alert('Client ID와 Client Secret을 입력해주세요.'); return; }
 
   const btn = document.getElementById('runBtn');
   btn.disabled = true; btn.textContent = '분석 중...';
-  document.getElementById('resultArea').innerHTML = '<div class="loading"><div class="spinner"></div>쇼핑인사이트에서 실시간 인기 키워드 수집 중...</div>';
+  document.getElementById('trendResult').innerHTML = '<div class="loading"><div class="spinner"></div>트렌드 분석 중...</div>';
 
   try {
+    const keywords = KEYWORD_SETS[selectedCat];
     const { start, end } = getDateRange();
-
-    // 1단계: 쇼핑인사이트에서 실시간 인기 키워드 TOP 20 수집
-    document.querySelector('.loading div:last-child') && (document.querySelector('.spinner').nextSibling.textContent = '인기 키워드 트렌드 분석 중...');
-    const topKeywords = await fetchTopKeywords(clientId, clientSecret, selectedCatId, start, end);
-
-    if (topKeywords.length === 0) throw new Error('키워드를 가져오지 못했습니다. 카테고리 코드를 확인해주세요.');
-
-    // 2단계: 수집된 키워드 트렌드 분석
-    const trendData = await fetchTrendBatch(clientId, clientSecret, topKeywords, start, end);
+    const trendData = await fetchTrendBatch(clientId, clientSecret, keywords, start, end);
     const trends = calcTrend(trendData);
-    const sorted = topKeywords
-      .map(kw => ({ kw, ...(trends[kw] || { score: 0, trend: 0 }) }))
-      .sort((a, b) => b.score - a.score);
-
+    const sorted = keywords.map(kw => ({ kw, ...(trends[kw] || { score: 0, trend: 0 }) })).sort((a,b) => b.score - a.score);
     const maxScore = sorted[0]?.score || 1;
     const rising = sorted.filter(k => k.trend > 10).slice(0, 5);
-    const stable = sorted.filter(k => k.score >= 10 && k.trend >= -10 && k.trend <= 10).slice(0, 5);
+    const stable = sorted.filter(k => k.score >= 20 && k.trend >= -10 && k.trend <= 10).slice(0, 5);
 
-    document.getElementById('resultArea').innerHTML = `
-      <div class="date-bar">📅 분석일 <span>${getToday()}</span> 카테고리 <span>${selectedCatName}</span> 기간 <span>최근 30일</span></div>
-      <div class="notice">💡 <strong>실시간 인기 키워드 ${topKeywords.length}개 자동 수집됨</strong><br>🔥 급상승 → 지금 바로 타오바오 소싱 &nbsp;|&nbsp; 📈 안정 인기 → 재고 꾸준히 유지</div>
-
+    document.getElementById('trendResult').innerHTML = `
+      <div class="date-bar">📅 분석일 <span>${getToday()}</span> 카테고리 <span>${selectedCat}</span></div>
+      <div class="notice">💡 🔥 급상승 → 지금 바로 타오바오 소싱 | 📈 안정 인기 → 재고 유지</div>
       <div class="result-grid">
         <div class="result-card">
-          <h3>🔥 급상승 키워드 — 지금 바로 소싱</h3>
-          ${rising.length === 0 ? '<p class="empty">이번 주 급상승 키워드 없음</p>' :
-            `<ul class="kw-list">${rising.map(k=>`
-              <li class="kw-item">
-                <span class="kw-name">${k.kw}</span>
-                <div class="kw-meta"><span class="badge badge-up">▲ ${k.trend}%</span><span class="kw-score">${k.score}점</span></div>
-              </li>`).join('')}</ul>`}
+          <h3>🔥 급상승 키워드</h3>
+          ${rising.length === 0 ? '<p class="empty">이번 주 급상승 없음</p>' : `<ul class="kw-list">${rising.map(k=>`<li class="kw-item"><span class="kw-name">${k.kw}</span><div class="kw-meta"><span class="badge badge-up">▲ ${k.trend}%</span><span class="kw-score">${k.score}점</span></div></li>`).join('')}</ul>`}
         </div>
         <div class="result-card">
-          <h3>📈 안정 인기 키워드 — 재고 유지</h3>
-          ${stable.length === 0 ? '<p class="empty">해당 키워드 없음</p>' :
-            `<ul class="kw-list">${stable.map(k=>`
-              <li class="kw-item">
-                <span class="kw-name">${k.kw}</span>
-                <div class="kw-meta"><span class="badge badge-stable">안정</span><span class="kw-score">${k.score}점</span></div>
-              </li>`).join('')}</ul>`}
+          <h3>📈 안정 인기 키워드</h3>
+          ${stable.length === 0 ? '<p class="empty">해당 없음</p>' : `<ul class="kw-list">${stable.map(k=>`<li class="kw-item"><span class="kw-name">${k.kw}</span><div class="kw-meta"><span class="badge badge-stable">안정</span><span class="kw-score">${k.score}점</span></div></li>`).join('')}</ul>`}
         </div>
       </div>
-
       <div class="table-card">
-        <h3>📋 실시간 인기 키워드 전체 순위</h3>
+        <h3>📋 전체 키워드 순위 + 타오바오 검색어</h3>
         <table>
           <tr><th>#</th><th>키워드</th><th>점수</th><th>변화율</th><th>트렌드</th><th>타오바오 검색어</th><th></th></tr>
-          ${sorted.map((k,i)=>`
-            <tr>
-              <td style="color:var(--text2);font-size:12px">${i+1}</td>
-              <td style="font-weight:500">${k.kw} ${!TAOBAO_MAP[k.kw] ? '<span class="badge badge-new">신규</span>' : ''}</td>
-              <td><span class="badge badge-blue">${k.score}점</span></td>
-              <td><span class="badge ${k.trend>10?'badge-up':k.trend<-10?'badge-down':'badge-stable'}">${k.trend>0?'▲':k.trend<0?'▼':'-'} ${Math.abs(k.trend)}%</span></td>
-              <td><div class="trend-bar"><div class="trend-fill" style="width:${Math.round(k.score/maxScore*100)}%"></div></div></td>
-              <td class="cn">${TAOBAO_MAP[k.kw] || '검색어 문의'}</td>
-              <td>${TAOBAO_MAP[k.kw] ? `<button class="copy-btn" onclick="copyText('${TAOBAO_MAP[k.kw]}',this)">복사</button>` : ''}</td>
-            </tr>`).join('')}
+          ${sorted.map((k,i)=>`<tr>
+            <td style="color:var(--text2);font-size:12px">${i+1}</td>
+            <td style="font-weight:500">${k.kw}</td>
+            <td><span class="badge badge-blue">${k.score}점</span></td>
+            <td><span class="badge ${k.trend>10?'badge-up':k.trend<-10?'badge-down':'badge-stable'}">${k.trend>0?'▲':k.trend<0?'▼':'-'} ${Math.abs(k.trend)}%</span></td>
+            <td><div class="trend-bar"><div class="trend-fill" style="width:${Math.round(k.score/maxScore*100)}%"></div></div></td>
+            <td class="cn">${TAOBAO_MAP[k.kw]||'-'}</td>
+            <td>${TAOBAO_MAP[k.kw]?`<button class="copy-btn" onclick="copyText('${TAOBAO_MAP[k.kw]}',this)">복사</button>`:''}</td>
+          </tr>`).join('')}
         </table>
-      </div>
-    `;
+      </div>`;
   } catch(e) {
-    document.getElementById('resultArea').innerHTML = `<div class="err">⚠️ 오류: ${e.message}<br>API 키를 확인하거나 잠시 후 다시 시도해주세요.</div>`;
+    document.getElementById('trendResult').innerHTML = `<div class="err">⚠️ 오류: ${e.message}</div>`;
   } finally {
     btn.disabled = false; btn.textContent = '🔍 분석 시작';
   }
+}
+
+function copyText(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '복사됨 ✓'; btn.classList.add('done');
+    setTimeout(() => { btn.textContent = '복사'; btn.classList.remove('done'); }, 1500);
+  });
 }
 window.copyText = copyText;
 </script>
