@@ -318,7 +318,7 @@ async function analyzeKeywordFile(data, filename, area) {
 
   const kwCol = row => row["키워드"] !== undefined ? row["키워드"] : (getCol(row,"키워드") || "");
 
-  const allKeywords = filtered.slice(0,30).map(r => kwCol(r)).filter(kw => kw);
+  const allKeywords = filtered.slice(0,50).map(r => kwCol(r)).filter(kw => kw);
   const newKeywords = allKeywords.filter(kw => !TAOBAO_MAP[kw]);
   const anthropicKey = (document.getElementById('anthropicKey2') || document.getElementById('anthropicKey') || {}).value?.trim();
 
@@ -350,7 +350,14 @@ async function analyzeKeywordFile(data, filename, area) {
 출력 형식 (JSON만, 코드블록 없이):
 {"상표권":{"키워드1":"안전","키워드2":"위험"},"검색어":{"키워드1":"中文","키워드2":"中文"}}
 
-키워드 목록: ${allKeywords.join(', ')}`
+키워드 목록: ${allKeywords.join(', ')}
+
+추가 지침:
+- 검색어는 단순 번역이 아닌 타오바오에서 실제 판매자들이 상품 등록할 때 쓰는 중국어 표현으로
+- 예: "청첩장제작" → "婚礼请柬定制印刷" (맞춤 인쇄 느낌)
+- 예: "카드단말기" → "便携无线POS收款机" (실제 상품명 느낌)
+- 예: "현수막" → "定制横幅广告布条幅" (맞춤 제작 느낌)
+- 2~4개 단어 조합으로 검색 히트율 높게`
             }]
           }
         })
