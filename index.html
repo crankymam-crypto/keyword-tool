@@ -380,9 +380,11 @@ async function analyzeKeywordFile(data, filename, area) {
             });
             console.log('타오바오 검색어 추가:', Object.keys(parsed['검색어']).length + '개');
             // 매칭 확인
-            allKeywords.forEach(kw => {
-              if (!TAOBAO_MAP[kw]) console.log('매칭 실패:', JSON.stringify(kw));
-            });
+            const failed = allKeywords.filter(kw => !TAOBAO_MAP[kw]);
+            if (failed.length > 0) {
+              console.log('매칭 실패 키워드:', failed.map(k => JSON.stringify(k)).join(', '));
+              console.log('TAOBAO_MAP 키 샘플:', Object.keys(TAOBAO_MAP).slice(-5).map(k => JSON.stringify(k)).join(', '));
+            }
           }
         } catch(e) { console.log('JSON 파싱 오류:', e.message); }
       }
