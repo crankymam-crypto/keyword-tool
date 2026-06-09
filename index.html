@@ -262,8 +262,11 @@ function analyzeKeywordFile(data, filename, area) {
 
   const getCol = (row, ...keys) => {
     for (const k of keys) {
-      const found = Object.keys(row).find(c => c.includes(k.replace(/\s/g,"")));
-      if (found !== undefined) return row[found];
+      const clean = k.replace(/\s/g,"");
+      const exact = Object.keys(row).find(c => c === clean);
+      if (exact !== undefined) return row[exact];
+      const partial = Object.keys(row).find(c => c.includes(clean) && !c.startsWith("신규"));
+      if (partial !== undefined) return row[partial];
     }
     return null;
   };
@@ -282,7 +285,7 @@ function analyzeKeywordFile(data, filename, area) {
 
   const getToday = () => { const d=new Date(); return d.getFullYear()+"년 "+(d.getMonth()+1)+"월 "+d.getDate()+"일"; };
 
-  const kwCol = row => getCol(row,"키워드") || "";
+  const kwCol = row => row["키워드"] !== undefined ? row["키워드"] : (getCol(row,"키워드") || "");
 
   area.innerHTML = `
     <div class="date-bar">📅 분석일 <span>${getToday()}</span> 파일 <span>${filename}</span> 전체 <span>${data.length}개 키워드</span> 블루오션 <span>${filtered.length}개</span></div>
