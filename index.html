@@ -360,11 +360,24 @@ JSON 형식으로만 답하세요(다른 텍스트 없이):
       });
       const resData = await res.json();
       const text = resData.content?.[0]?.text || '{}';
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      // 코드블록 제거 후 JSON 파싱
+      const cleaned = text.replace(/```json\n?|```/g, '').trim();
+      const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        if (parsed['상표권']) trademarkSafe = parsed['상표권'];
-        if (parsed['검색어']) Object.assign(TAOBAO_MAP, parsed['검색어']);
+        try {
+          const parsed = JSON.parse(jsonMatch[0]);
+          if (parsed['상표권']) {
+            trademarkSafe = parsed['상표권'];
+            console.log('상표권 체크 완료:', Object.keys(trademarkSafe).length + '개');
+          }
+          if (parsed['검색어']) {
+            // 키 공백 제거 후 저장
+            Object.entries(parsed['검색어']).forEach(([k, v]) => {
+              TAOBAO_MAP[k.trim()] = v;
+            });
+            console.log('타오바오 검색어 추가:', Object.keys(parsed['검색어']).length + '개');
+          }
+        } catch(e) { console.log('JSON 파싱 오류:', e.message); }
       }
     } catch(e) {
       console.log('Claude API 오류:', e.message);
