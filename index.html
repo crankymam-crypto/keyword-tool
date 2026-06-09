@@ -350,6 +350,8 @@ async function analyzeKeywordFile(data, filename, area) {
 출력 형식 (JSON만, 코드블록 없이):
 {"상표권":{"키워드1":"안전","키워드2":"위험"},"검색어":{"키워드1":"中文","키워드2":"中文"}}
 
+중요: JSON 키는 반드시 입력된 한국어 키워드 그대로 (한자 변환 절대 금지, 영문 변환 절대 금지)
+
 키워드 목록: ${allKeywords.join(', ')}
 
 추가 지침:
@@ -380,11 +382,19 @@ async function analyzeKeywordFile(data, filename, area) {
             });
             console.log('타오바오 검색어 추가:', Object.keys(parsed['검색어']).length + '개');
             // 매칭 확인
-            const failed = allKeywords.filter(kw => !TAOBAO_MAP[kw]);
-            if (failed.length > 0) {
-              console.log('매칭 실패 키워드:', failed.map(k => JSON.stringify(k)).join(', '));
-              console.log('TAOBAO_MAP 키 샘플:', Object.keys(TAOBAO_MAP).slice(-5).map(k => JSON.stringify(k)).join(', '));
-            }
+            // 한자 혼입 키 정규화 - 원본 키워드와 유사한 키 찾아서 매핑
+            allKeywords.forEach(kw => {
+              if (!TAOBAO_MAP[kw]) {
+                // TAOBAO_MAP에서 비슷한 키 찾기 (앞 2글자 일치)
+                const similar = Object.keys(TAOBAO_MAP).find(k => 
+                  k.slice(0,3) === kw.slice(0,3) && Math.abs(k.length - kw.length) <= 2
+                );
+                if (similar) {
+                  TAOBAO_MAP[kw] = TAOBAO_MAP[similar];
+                  console.log('키 매핑 수정:', kw, '←', similar);
+                }
+              }
+            });
           }
         } catch(e) { console.log('JSON 파싱 오류:', e.message); }
       }
