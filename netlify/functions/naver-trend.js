@@ -13,17 +13,29 @@ exports.handler = async function(event) {
   try {
     const { clientId, clientSecret, body: apiBody, endpoint } = JSON.parse(event.body);
 
-    const response = await fetch(`https://openapi.naver.com/v1/datalab/${endpoint}`, {
+    const url = endpoint === 'search'
+      ? 'https://openapi.naver.com/v1/datalab/search'
+      : `https://openapi.naver.com/v1/datalab/${endpoint}`;
+
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'X-Naver-Client-Id': clientId,
         'X-Naver-Client-Secret': clientSecret,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json; charset=utf-8'
       },
       body: JSON.stringify(apiBody)
     });
 
-    const data = await response.json();
+    const text = await response.text();
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch(e) {
+      return { statusCode: 200, headers, body: JSON.stringify({ error: 'JSON 파싱 오류', raw: text.slice(0, 500) }) };
+    }
+
     return { statusCode: 200, headers, body: JSON.stringify(data) };
   } catch(e) {
     return { statusCode: 500, headers, body: JSON.stringify({ error: e.message }) };
