@@ -325,23 +325,20 @@ async function analyzeKeywordFile(data, filename, area) {
   if (newKeywords.length > 0 && anthropicKey) {
     area.innerHTML = '<div class="loading"><div class="spinner"></div>신규 키워드 타오바오 검색어 자동 생성 중...</div>';
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const res = await fetch('/.netlify/functions/naver-trend', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': anthropicKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          messages: [{
-            role: 'user',
-            content: `다음 한국어 키워드들의 타오바오 검색어(중국어)를 알려주세요. JSON 형식으로만 답하세요. 예: {"키워드1":"중국어검색어1","키워드2":"중국어검색어2"}
-
-키워드: ${newKeywords.join(', ')}`
-          }]
+          anthropicKey,
+          endpoint: 'anthropic',
+          body: {
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 1000,
+            messages: [{
+              role: 'user',
+              content: '다음 한국어 키워드들의 타오바오 검색어(중국어)를 알려주세요. JSON 형식으로만 답하세요. 예: {"키워드1":"중국어검색어1"}\n\n키워드: ' + newKeywords.join(', ')
+            }]
+          }
         })
       });
       const resData = await res.json();
