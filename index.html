@@ -253,16 +253,16 @@ function analyzeExcel(data, filename) {
 }
 
 function analyzeKeywordFile(data, filename, area) {
-  // 컬럼명 정규화
+  // 컬럼명 정규화 (줄바꿈/공백 제거)
   const normalized = data.map(row => {
     const r = {};
-    Object.keys(row).forEach(k => { r[k.replace(/\n/g,' ').trim()] = row[k]; });
+    Object.keys(row).forEach(k => { r[k.replace(/[\n\r\s]/g,"")] = row[k]; });
     return r;
   });
 
   const getCol = (row, ...keys) => {
     for (const k of keys) {
-      const found = Object.keys(row).find(c => c.includes(k));
+      const found = Object.keys(row).find(c => c.includes(k.replace(/\s/g,"")));
       if (found !== undefined) return row[found];
     }
     return null;
@@ -270,19 +270,19 @@ function analyzeKeywordFile(data, filename, area) {
 
   // 블루오션 필터
   const filtered = normalized.filter(row => {
-    const search = parseFloat(getCol(row,'검색량','최근')) || 0;
-    const comp = parseFloat(getCol(row,'경쟁률')) || 999;
-    const price = parseFloat(getCol(row,'평균가')) || 0;
-    const brand = getCol(row,'브랜드') || '';
-    const overseas = parseFloat(getCol(row,'해외배송')) || 1;
-    return search >= 500 && search <= 30000 && comp <= 15 && price >= 15000 && brand !== 'O' && overseas <= 0.1;
+    const search = parseFloat(getCol(row,"최근1개월검색량","검색량")) || 0;
+    const comp = parseFloat(getCol(row,"경쟁률")) || 999;
+    const price = parseFloat(getCol(row,"네이버평균가","평균가")) || 0;
+    const brand = getCol(row,"브랜드키워드","브랜드") || "";
+    const overseas = parseFloat(getCol(row,"네이버해외배송비율","해외배송비율")) || 1;
+    return search >= 500 && search <= 30000 && comp <= 15 && price >= 15000 && brand !== "O" && overseas <= 0.1;
   });
 
-  filtered.sort((a,b) => (parseFloat(getCol(b,'경쟁률'))||999) - (parseFloat(getCol(a,'경쟁률'))||999) );
+  filtered.sort((a,b) => (parseFloat(getCol(a,"경쟁률"))||999) - (parseFloat(getCol(b,"경쟁률"))||999));
 
-  const getToday = () => { const d=new Date(); return `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`; };
+  const getToday = () => { const d=new Date(); return d.getFullYear()+"년 "+(d.getMonth()+1)+"월 "+d.getDate()+"일"; };
 
-  const kwCol = row => getCol(row,'키워드') || '';
+  const kwCol = row => getCol(row,"키워드") || "";
 
   area.innerHTML = `
     <div class="date-bar">📅 분석일 <span>${getToday()}</span> 파일 <span>${filename}</span> 전체 <span>${data.length}개 키워드</span> 블루오션 <span>${filtered.length}개</span></div>
@@ -294,9 +294,9 @@ function analyzeKeywordFile(data, filename, area) {
         <tr><th>#</th><th>키워드</th><th>월검색량</th><th>경쟁률</th><th>평균가</th><th>타오바오 검색어</th><th></th></tr>
         ${filtered.slice(0,30).map((row,i) => {
           const kw = kwCol(row);
-          const search = Math.round(parseFloat(getCol(row,'검색량','최근'))||0).toLocaleString();
+          const search = Math.round(parseFloat(getCol(row,"최근1개월검색량","검색량"))||0).toLocaleString();
           const comp = (parseFloat(getCol(row,'경쟁률'))||0).toFixed(1);
-          const price = Math.round(parseFloat(getCol(row,'평균가'))||0).toLocaleString();
+          const price = Math.round(parseFloat(getCol(row,"네이버평균가","평균가"))||0).toLocaleString();
           const tb = TAOBAO_MAP[kw];
           return `<tr>
             <td style="color:var(--text2);font-size:12px">${i+1}</td>
