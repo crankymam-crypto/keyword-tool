@@ -328,7 +328,7 @@ async function analyzeKeywordFile(data, filename, area) {
   if (anthropicKey && allKeywords.length > 0) {
     area.innerHTML = '<div class="loading"><div class="spinner"></div>상표권 검토 및 타오바오 검색어 생성 중...</div>';
     try {
-      const res = await fetch('/.netlify/functions/naver-trend', {
+      const res = await fetch('/api/proxy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -539,7 +539,7 @@ function getToday() {
 }
 
 async function callAPI(clientId, clientSecret, endpoint, body) {
-  const res = await fetch('/.netlify/functions/naver-trend', {
+  const res = await fetch('/api/proxy', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ clientId, clientSecret, endpoint, body })
