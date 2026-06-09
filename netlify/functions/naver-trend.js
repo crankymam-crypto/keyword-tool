@@ -11,8 +11,24 @@ exports.handler = async function(event) {
   }
 
   try {
-    const { clientId, clientSecret, body: apiBody, endpoint } = JSON.parse(event.body);
+    const { clientId, clientSecret, anthropicKey, body: apiBody, endpoint } = JSON.parse(event.body);
 
+    // Anthropic API 호출 (타오바오 검색어 자동 생성)
+    if (endpoint === 'anthropic') {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': anthropicKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify(apiBody)
+      });
+      const data = await res.json();
+      return { statusCode: 200, headers, body: JSON.stringify(data) };
+    }
+
+    // 네이버 API 호출
     const urlMap = {
       'search': 'https://openapi.naver.com/v1/datalab/search',
       'shopping/category/keyword/rank': 'https://openapi.naver.com/v1/datalab/shopping/category/keyword/rank',
