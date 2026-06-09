@@ -318,7 +318,7 @@ async function analyzeKeywordFile(data, filename, area) {
 
   const kwCol = row => row["키워드"] !== undefined ? row["키워드"] : (getCol(row,"키워드") || "");
 
-  const allKeywords = filtered.slice(0,30).map(r => kwCol(r)).filter(kw => kw);
+  const allKeywords = filtered.slice(0,50).map(r => kwCol(r)).filter(kw => kw);
   const newKeywords = allKeywords.filter(kw => !TAOBAO_MAP[kw]);
   const anthropicKey = (document.getElementById('anthropicKey2') || document.getElementById('anthropicKey') || {}).value?.trim();
 
@@ -336,7 +336,7 @@ async function analyzeKeywordFile(data, filename, area) {
           endpoint: 'anthropic',
           body: {
             model: 'claude-haiku-4-5-20251001',
-            max_tokens: 4000,
+            max_tokens: 4096,
             messages: [{
               role: 'user',
               content: `아래 키워드 목록을 분석해주세요.
