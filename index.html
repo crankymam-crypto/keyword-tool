@@ -131,6 +131,16 @@
 
   <!-- 탭1: 엑셀 업로드 분석 -->
   <div id="tab-upload" class="tab-content active">
+    <div class="card" style="margin-bottom:20px">
+      <h2>🤖 Anthropic API 설정 <span style="color:var(--green);font-size:11px;font-weight:400;text-transform:none">신규 키워드 타오바오 검색어 자동 생성</span></h2>
+      <div class="api-row">
+        <div class="api-field">
+          <label>Anthropic API Key</label>
+          <input type="password" id="anthropicKey2" placeholder="sk-ant-api03-... 입력" />
+        </div>
+      </div>
+      <div class="save-hint">⚠️ 키는 이 브라우저에서만 사용됩니다. 신규 키워드가 있을 때만 호출돼요.</div>
+    </div>
     <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()"
       ondragover="event.preventDefault();this.classList.add('drag')"
       ondragleave="this.classList.remove('drag')"
@@ -146,19 +156,25 @@
   <!-- 탭2: 네이버 트렌드 -->
   <div id="tab-trend" class="tab-content">
     <div class="card">
-      <h2>🔑 네이버 API 설정</h2>
+      <h2>🔑 API 설정</h2>
       <div class="api-row">
         <div class="api-field">
-          <label>Client ID</label>
+          <label>네이버 Client ID</label>
           <input type="text" id="clientId" placeholder="Client ID 입력" />
         </div>
         <div class="api-field">
-          <label>Client Secret</label>
+          <label>네이버 Client Secret</label>
           <input type="password" id="clientSecret" placeholder="Client Secret 입력" />
         </div>
         <button class="btn" id="runBtn" onclick="runTrend()">🔍 분석 시작</button>
       </div>
-      <div class="save-hint">⚠️ 키는 이 브라우저에서만 사용됩니다.</div>
+      <div class="api-row" style="margin-top:12px">
+        <div class="api-field">
+          <label>Anthropic API Key <span style="color:var(--green);font-size:11px">● 타오바오 자동 검색어 생성</span></label>
+          <input type="password" id="anthropicKey" placeholder="sk-ant-api03-... 입력" />
+        </div>
+      </div>
+      <div class="save-hint">⚠️ 키는 이 브라우저에서만 사용됩니다. 외부로 전송되지 않아요.</div>
     </div>
     <div class="cat-row">
       <div class="cat-btn active" onclick="selectCat(this,'공구/산업용품')">⚙️ 공구/산업용품</div>
@@ -182,6 +198,22 @@ function switchTab(tab) {
 
 // ========== 타오바오 매핑 ==========
 const TAOBAO_MAP = {
+  // 신규 추가
+  'hpt제트건':'HPT气动工具 射钉枪','크랙몬스터':'裂缝修复剂 混凝土修补',
+  '차량용불꽃신호기':'车用信号灯 应急三角架','hpt멀티커터':'多功能切割机 电动切割工具',
+  '아세아관리기':'农用管理机 微耕机','아세아관리기부품':'微耕机配件 管理机零件',
+  'dcb184':'锂电池 18V电池','완강기':'缓降器 逃生绳',
+  '점적테이프':'滴灌带 滴灌管','고추말뚝':'辣椒支架 蔬菜支撑杆',
+  '아스팔트슁글':'沥青瓦 油毡瓦',
+  '오일스테인':'木材染色剂 油性木蜡油',
+  '증류수':'蒸馏水 纯净水',
+  '보강토블럭':'挡土墙砖 护坡砖',
+  '보도블럭':'人行道砖 透水砖',
+  '조립식판넬':'组合式彩钢板 夹芯板',
+  '체감온도계':'温湿度计 风寒指数温度计',
+  '물호스50m':'水管软管 浇水管50米',
+  '논가스용접기':'无气焊机 气体保护焊机',
+  '잡초제거기':'除草工具 拔草器',
   '볼라드':'路桩 防撞柱','스트레치필름':'缠绕膜 拉伸膜','융스위치':'熔断器开关',
   '그레이팅':'格栅板 钢格板','절연장갑':'绝缘手套 电工手套','작업복':'工作服套装',
   '공업용랩':'工业缠绕膜','수평몰탈':'自流平水泥','징크판넬':'镀锌钢板','용접기':'电焊机',
@@ -226,7 +258,7 @@ function handleFile(file) {
       const sheetName = wb.SheetNames.find(n => n.toLowerCase() === 'naver') || wb.SheetNames[0];
       const ws = wb.Sheets[sheetName];
       const data = XLSX.utils.sheet_to_json(ws);
-      analyzeExcel(data, file.name);
+      await analyzeExcel(data, file.name);
     } catch(err) {
       document.getElementById('uploadResult').innerHTML = `<div class="err">⚠️ 파일 읽기 오류: ${err.message}</div>`;
     }
@@ -235,7 +267,7 @@ function handleFile(file) {
   reader.readAsArrayBuffer(file);
 }
 
-function analyzeExcel(data, filename) {
+async function analyzeExcel(data, filename) {
   const area = document.getElementById('uploadResult');
 
   // 셀러라이프 키워드 분석 파일인지 판별
@@ -244,7 +276,7 @@ function analyzeExcel(data, filename) {
   const isSales = cols.some(c => c.includes('결제금액') || c.includes('결제수') || c.includes('상품명'));
 
   if (isSeller) {
-    analyzeKeywordFile(data, filename, area);
+    await analyzeKeywordFile(data, filename, area);
   } else if (isSales) {
     analyzeSalesFile(data, filename, area);
   } else {
@@ -252,7 +284,7 @@ function analyzeExcel(data, filename) {
   }
 }
 
-function analyzeKeywordFile(data, filename, area) {
+async function analyzeKeywordFile(data, filename, area) {
   // 컬럼명 정규화 (줄바꿈/공백 제거)
   const normalized = data.map(row => {
     const r = {};
@@ -286,6 +318,44 @@ function analyzeKeywordFile(data, filename, area) {
   const getToday = () => { const d=new Date(); return d.getFullYear()+"년 "+(d.getMonth()+1)+"월 "+d.getDate()+"일"; };
 
   const kwCol = row => row["키워드"] !== undefined ? row["키워드"] : (getCol(row,"키워드") || "");
+
+  // 신규 키워드 (타오바오 검색어 없는 것) Claude로 자동 생성
+  const newKeywords = filtered.slice(0,30).map(r => kwCol(r)).filter(kw => kw && !TAOBAO_MAP[kw]);
+  const anthropicKey = (document.getElementById('anthropicKey2') || document.getElementById('anthropicKey') || {}).value?.trim();
+
+  if (newKeywords.length > 0 && anthropicKey) {
+    area.innerHTML = '<div class="loading"><div class="spinner"></div>신규 키워드 타오바오 검색어 자동 생성 중...</div>';
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': anthropicKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{
+            role: 'user',
+            content: `다음 한국어 키워드들의 타오바오 검색어(중국어)를 알려주세요. JSON 형식으로만 답하세요. 예: {"키워드1":"중국어검색어1","키워드2":"중국어검색어2"}
+
+키워드: ${newKeywords.join(', ')}`
+          }]
+        })
+      });
+      const resData = await res.json();
+      const text = resData.content?.[0]?.text || '{}';
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const newMap = JSON.parse(jsonMatch[0]);
+        Object.assign(TAOBAO_MAP, newMap);
+      }
+    } catch(e) {
+      console.log('Claude API 오류:', e.message);
+    }
+  }
 
   area.innerHTML = `
     <div class="date-bar">📅 분석일 <span>${getToday()}</span> 파일 <span>${filename}</span> 전체 <span>${data.length}개 키워드</span> 블루오션 <span>${filtered.length}개</span></div>
