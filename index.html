@@ -2,9 +2,6 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>스마트스토어 키워드 분석툴</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -312,7 +309,7 @@ async function analyzeKeywordFile(data, filename, area) {
     const price = parseFloat(getCol(row,"네이버평균가","평균가")) || 0;
     const brand = getCol(row,"브랜드키워드","브랜드") || "";
     const overseas = parseFloat(getCol(row,"네이버해외배송비율","해외배송비율")) || 1;
-    return search >= 500 && search <= 30000 && comp <= 15 && price >= 15000 && brand !== "O" && overseas <= 0.1;
+    return search >= 500 && search <= 10000 && comp <= 5 && price >= 15000 && brand !== "O" && overseas >= 0.1;
   });
 
   filtered.sort((a,b) => (parseFloat(getCol(a,"경쟁률"))||999) - (parseFloat(getCol(b,"경쟁률"))||999));
@@ -321,12 +318,15 @@ async function analyzeKeywordFile(data, filename, area) {
 
   const kwCol = row => row["키워드"] !== undefined ? row["키워드"] : (getCol(row,"키워드") || "");
 
-  // 신규 키워드 (타오바오 검색어 없는 것) Claude로 자동 생성
-  const newKeywords = filtered.slice(0,30).map(r => kwCol(r)).filter(kw => kw && !TAOBAO_MAP[kw]);
+  const allKeywords = filtered.slice(0,30).map(r => kwCol(r)).filter(kw => kw);
+  const newKeywords = allKeywords.filter(kw => !TAOBAO_MAP[kw]);
   const anthropicKey = (document.getElementById('anthropicKey2') || document.getElementById('anthropicKey') || {}).value?.trim();
 
-  if (newKeywords.length > 0 && anthropicKey) {
-    area.innerHTML = '<div class="loading"><div class="spinner"></div>신규 키워드 타오바오 검색어 자동 생성 중...</div>';
+  // 상표권 체크 + 타오바오 검색어 생성 (Claude API)
+  let trademarkSafe = {}; // 상표권 안전 여부
+
+  if (anthropicKey && allKeywords.length > 0) {
+    area.innerHTML = '<div class="loading"><div class="spinner"></div>상표권 검토 및 타오바오 검색어 생성 중...</div>';
     try {
       const res = await fetch('/.netlify/functions/naver-trend', {
         method: 'POST',
@@ -336,10 +336,24 @@ async function analyzeKeywordFile(data, filename, area) {
           endpoint: 'anthropic',
           body: {
             model: 'claude-haiku-4-5-20251001',
-            max_tokens: 1000,
+            max_tokens: 2000,
             messages: [{
               role: 'user',
-              content: '다음 한국어 키워드들의 타오바오 검색어(중국어)를 알려주세요. JSON 형식으로만 답하세요. 예: {"키워드1":"중국어검색어1"}\n\n키워드: ' + newKeywords.join(', ')
+              content: `다음 키워드들에 대해 두 가지를 분석해주세요.
+1. 상표권/지식재산권 위험도: 특정 브랜드명, 상표명, 고유명사인지 확인
+2. 타오바오 중국어 검색어
+
+JSON 형식으로만 답하세요(다른 텍스트 없이):
+{
+  "상표권": {"키워드1": "안전", "키워드2": "위험", "키워드3": "주의"},
+  "검색어": {"키워드1": "중국어검색어1", "키워드2": "중국어검색어2"}
+}
+
+안전: 일반명사, 판매 가능
+주의: 브랜드 연관 가능성 있음, 확인 필요
+위험: 명확한 브랜드명/상표명, 판매 금지
+
+키워드: ${allKeywords.join(', ')}`
             }]
           }
         })
@@ -348,31 +362,40 @@ async function analyzeKeywordFile(data, filename, area) {
       const text = resData.content?.[0]?.text || '{}';
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        const newMap = JSON.parse(jsonMatch[0]);
-        Object.assign(TAOBAO_MAP, newMap);
+        const parsed = JSON.parse(jsonMatch[0]);
+        if (parsed['상표권']) trademarkSafe = parsed['상표권'];
+        if (parsed['검색어']) Object.assign(TAOBAO_MAP, parsed['검색어']);
       }
     } catch(e) {
       console.log('Claude API 오류:', e.message);
     }
   }
 
+  // 상표권 위험 키워드 제거
+  const safeFiltered = filtered.slice(0,50).filter(row => {
+    const kw = kwCol(row);
+    const status = trademarkSafe[kw];
+    return status !== '위험';
+  });
+
   area.innerHTML = `
     <div class="date-bar">📅 분석일 <span>${getToday()}</span> 파일 <span>${filename}</span> 전체 <span>${data.length}개 키워드</span> 블루오션 <span>${filtered.length}개</span></div>
-    <div class="notice notice-green">✅ 블루오션 조건: 월검색량 500~30,000 · 경쟁률 15 이하 · 평균가 15,000원 이상 · 비브랜드 · 해외배송 10% 이하</div>
+    <div class="notice notice-green">✅ 블루오션 조건: 월검색량 500~10,000 · 경쟁률 5 이하 · 평균가 15,000원 이상 · 비브랜드 · 해외배송비율 10% 이상</div>
 
     <div class="table-card">
-      <h3>🎯 즉시 소싱 추천 키워드 TOP ${Math.min(filtered.length, 30)}개</h3>
+      <h3>🎯 즉시 소싱 추천 키워드 TOP ${Math.min(safeFiltered.length, 30)}개 <span style="font-size:11px;color:var(--green)">✅ 상표권 안전 확인</span></h3>
       <table>
         <tr><th>#</th><th>키워드</th><th>월검색량</th><th>경쟁률</th><th>평균가</th><th>타오바오 검색어</th><th></th></tr>
-        ${filtered.slice(0,30).map((row,i) => {
+        ${safeFiltered.slice(0,30).map((row,i) => {
           const kw = kwCol(row);
+          const tmStatus = trademarkSafe[kw];
           const search = Math.round(parseFloat(getCol(row,"최근1개월검색량","검색량"))||0).toLocaleString();
           const comp = (parseFloat(getCol(row,'경쟁률'))||0).toFixed(1);
           const price = Math.round(parseFloat(getCol(row,"네이버평균가","평균가"))||0).toLocaleString();
           const tb = TAOBAO_MAP[kw];
           return `<tr>
             <td style="color:var(--text2);font-size:12px">${i+1}</td>
-            <td style="font-weight:500">${kw} ${!tb?'<span class="badge badge-new">신규</span>':''}</td>
+            <td style="font-weight:500">${kw} ${!tb?'<span class="badge badge-new">신규</span>':''} ${tmStatus==='주의'?'<span class="badge badge-warn">⚠️주의</span>':''}</td>
             <td>${search}</td>
             <td><span class="badge ${parseFloat(comp)<5?'badge-green':'badge-stable'}">${comp}</span></td>
             <td>${price}원</td>
@@ -383,7 +406,7 @@ async function analyzeKeywordFile(data, filename, area) {
       </table>
     </div>
 
-    ${filtered.length === 0 ? '<div class="err">⚠️ 블루오션 조건에 맞는 키워드가 없습니다. 조건을 조정해보세요.</div>' : ''}
+    ${safeFiltered.length === 0 ? '<div class="err">⚠️ 조건에 맞는 키워드가 없습니다.</div>' : ''}
   `;
 }
 
