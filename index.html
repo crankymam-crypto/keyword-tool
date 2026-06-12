@@ -309,7 +309,7 @@ async function analyzeKeywordFile(data, filename, area) {
     const price = parseFloat(getCol(row,"네이버평균가","평균가")) || 0;
     const brand = getCol(row,"브랜드키워드","브랜드") || "";
     const overseas = parseFloat(getCol(row,"네이버해외배송비율","해외배송비율")) || 1;
-    return search >= 500 && search <= 10000 && comp <= 5 && price >= 15000 && brand !== "O" && overseas >= 0.2 && overseas <= 0.3;
+    return search >= 500 && search <= 10000 && comp <= 5 && price >= 15000 && brand !== "O" && overseas >= 0.35;
   });
 
   filtered.sort((a,b) => (parseFloat(getCol(a,"경쟁률"))||999) - (parseFloat(getCol(b,"경쟁률"))||999));
@@ -405,7 +405,7 @@ async function analyzeKeywordFile(data, filename, area) {
 
   area.innerHTML = `
     <div class="date-bar">📅 분석일 <span>${getToday()}</span> 파일 <span>${filename}</span> 전체 <span>${data.length}개 키워드</span> 블루오션 <span>${filtered.length}개</span></div>
-    <div class="notice notice-green">✅ 블루오션 조건: 월검색량 500~10,000 · 경쟁률 5 이하 · 평균가 15,000원 이상 · 비브랜드 · 해외배송비율 20~30%</div>
+    <div class="notice notice-green">✅ 블루오션 조건: 월검색량 500~10,000 · 경쟁률 5 이하 · 평균가 15,000원 이상 · 비브랜드 · 해외배송비율 35% 이상</div>
 
     <div class="table-card">
       <h3>🎯 즉시 소싱 추천 키워드 TOP ${Math.min(safeFiltered.length, 30)}개 <span style="font-size:11px;color:var(--green)">✅ 상표권 안전 확인</span></h3>
